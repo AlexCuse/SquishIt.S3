@@ -2,5 +2,11 @@
 bin
 obj
 
+# solution stuff
+*.suo
+
 # mstest test results
 TestResults
+
+# resharper
+*ReSharper*
