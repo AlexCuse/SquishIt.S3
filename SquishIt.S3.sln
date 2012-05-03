@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.S3", "SquishIt.S3\SquishIt.S3.csproj", "{A3932803-146A-4D53-93C3-FC22ED77253E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.S3.Tests", "SquishIt.S3.Tests\SquishIt.S3.Tests.csproj", "{C1F17BFE-6908-46D1-ADDF-646885FE3E01}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{A3932803-146A-4D53-93C3-FC22ED77253E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A3932803-146A-4D53-93C3-FC22ED77253E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A3932803-146A-4D53-93C3-FC22ED77253E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1F17BFE-6908-46D1-ADDF-646885FE3E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1F17BFE-6908-46D1-ADDF-646885FE3E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1F17BFE-6908-46D1-ADDF-646885FE3E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1F17BFE-6908-46D1-ADDF-646885FE3E01}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
