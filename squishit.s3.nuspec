@@ -1,0 +1,18 @@
+<package>
+  <metadata>
+    <id>SquishIt.S3</id>
+    <version>0.8.7-beta2</version>
+    <authors>Alex Ullrich</authors>
+	<owners>Alex Ullrich</owners>
+    <description>
+      S3 Integration for SquishIt
+    </description>
+	<projectUrl>https://github.com/AlexCuse/SquishIt.S3</projectUrl>
+	<dependencies>
+	  <dependency id="SquishIt" version="0.8.7-beta2" />
+    </dependencies>
+  </metadata>
+  <files>
+	<file src="SquishIt.S3\bin\Release\SquishIt.S3.dll" target="lib" />
+  </files>
+</package>

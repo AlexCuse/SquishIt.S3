@@ -15,6 +15,7 @@ namespace SquishIt.S3
             return RelativeFromAbsolutePath(path).TrimStart('/');
         }
 
+        //TODO: it would be nice to find a way to test this (using a mocked HttpContext(Base) resolver would help)
         static string RelativeFromAbsolutePath(string path)
         {
             if(HttpContext.Current != null)
