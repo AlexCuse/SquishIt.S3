@@ -20,10 +20,10 @@ namespace SquishIt.S3
             if(HttpContext.Current != null)
             {
                 var request = HttpContext.Current.Request;
-                if (request != null)
-                {
-                    return path.Replace(request.ServerVariables["APPL_PHYSICAL_PATH"], "/").Replace(@"\", "/");
-                }
+                var applicationPath = request.PhysicalApplicationPath;
+                var virtualDir = request.ApplicationPath;
+                virtualDir = virtualDir == "/" ? virtualDir : (virtualDir + "/");
+                return path.Replace(applicationPath, virtualDir).Replace(@"\", "/");
             }
             throw new InvalidOperationException("We can only map an absolute back to a relative path if an HttpContext is available.");
         }
