@@ -13,13 +13,8 @@ namespace SquishIt.S3
         readonly IKeyBuilder keyBuilder;
         readonly bool overwrite;
 
-        public S3Renderer(string bucket, AmazonS3 s3client)
-            : this(bucket, s3client, false)
-        {
-        }
-
-        public S3Renderer(string bucket, AmazonS3 s3client, bool overwrite)
-            : this(bucket, s3client, overwrite, new KeyBuilder())
+        public S3Renderer(string bucket, AmazonS3 s3client, string applicationPath, string virtualDirectory)
+            : this(bucket, s3client, false, new KeyBuilder(applicationPath, virtualDirectory))
         {
         }
 

@@ -10,23 +10,28 @@ namespace SquishIt.S3
 
     internal class KeyBuilder : IKeyBuilder
     {
+        readonly string physicalApplicationPath;
+        readonly string virtualDirectory;
+
+        public KeyBuilder(string physicalApplicationPath, string virtualDirectory)
+        {
+            this.physicalApplicationPath = physicalApplicationPath;
+            this.virtualDirectory = virtualDirectory;
+        }
+
         public string GetKeyFor(string path)
         {
             return RelativeFromAbsolutePath(path).TrimStart('/');
         }
 
         //TODO: it would be nice to find a way to test this (using a mocked HttpContext(Base) resolver would help)
-        static string RelativeFromAbsolutePath(string path)
+        string RelativeFromAbsolutePath(string path)
         {
-            if(HttpContext.Current != null)
-            {
-                var request = HttpContext.Current.Request;
-                var applicationPath = request.PhysicalApplicationPath;
-                var virtualDir = request.ApplicationPath;
-                virtualDir = virtualDir == "/" ? virtualDir : (virtualDir + "/");
-                return path.Replace(applicationPath, virtualDir).Replace(@"\", "/");
-            }
-            throw new InvalidOperationException("We can only map an absolute back to a relative path if an HttpContext is available.");
+            path = path.StartsWith(physicalApplicationPath)
+                           ? path.Substring(physicalApplicationPath.Length)
+                           : path;
+
+            return virtualDirectory + "/" + path.Replace(@"\", "/").TrimStart('/');
         }
     }
 }
