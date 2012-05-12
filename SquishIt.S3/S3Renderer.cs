@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Specialized;
 using System.Net;
-using System.Web;
 using Amazon.CloudFront;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -18,64 +17,6 @@ namespace SquishIt.S3
         bool overwrite;
         S3CannedACL cannedACL = S3CannedACL.NoACL;
         NameValueCollection headers;
-
-        public static S3Renderer Create(AmazonS3 s3client)
-        {
-            return new S3Renderer(s3client);
-        }
-
-        public S3Renderer WithBucketName(string bucketName)
-        {
-            this.bucket = bucketName;
-            return this;
-        }
-
-        public S3Renderer WithKeyBuilder(IKeyBuilder builder)
-        {
-            this.keyBuilder = builder;
-            return this;
-        }
-
-        public S3Renderer WithDefaultKeyBuilder(string physicalApplicationPath, string virtualDirectory)
-        {
-            this.keyBuilder = new KeyBuilder(physicalApplicationPath, virtualDirectory);
-            return this;
-        }
-
-        public S3Renderer WithCloudfrontClient(AmazonCloudFront client)
-        {
-            this.invalidator = new CloudFrontInvalidator(client);
-            return this;
-        }
-
-        public S3Renderer WithInvalidator(IInvalidator instance)
-        {
-            this.invalidator = instance;
-            return this;
-        }
-
-        public S3Renderer WithOverwriteBehavior(bool overwrite)
-        {
-            this.overwrite = overwrite;
-            return this;
-        }
-
-        public S3Renderer WithCannedAcl(S3CannedACL acl)
-        {
-            this.cannedACL = acl;
-            return this;
-        }
-
-        public S3Renderer WithHeaders(NameValueCollection headers)
-        {
-            this.headers = headers;
-            return this;
-        }
-
-        private S3Renderer(AmazonS3 s3client)
-        {
-            this.s3client = s3client;
-        }
 
         public void Render(string content, string outputPath)
         {
@@ -130,5 +71,63 @@ namespace SquishIt.S3
         {
             s3client.Dispose();
         }
+
+        #region setup
+        public static S3Renderer Create(AmazonS3 s3client)
+        {
+            return new S3Renderer(s3client);
+        }
+
+        public S3Renderer WithBucketName(string bucketName)
+        {
+            this.bucket = bucketName;
+            return this;
+        }
+
+        public S3Renderer WithKeyBuilder(IKeyBuilder builder)
+        {
+            this.keyBuilder = builder;
+            return this;
+        }
+
+        public S3Renderer WithDefaultKeyBuilder(string physicalApplicationPath, string virtualDirectory)
+        {
+            return WithKeyBuilder(new KeyBuilder(physicalApplicationPath, virtualDirectory));
+        }
+
+        public S3Renderer WithCloudfrontClient(AmazonCloudFront client)
+        {
+            return WithInvalidator(new CloudFrontInvalidator(client));
+        }
+
+        public S3Renderer WithInvalidator(IInvalidator instance)
+        {
+            this.invalidator = instance;
+            return this;
+        }
+
+        public S3Renderer WithOverwriteBehavior(bool overwrite)
+        {
+            this.overwrite = overwrite;
+            return this;
+        }
+
+        public S3Renderer WithCannedAcl(S3CannedACL acl)
+        {
+            this.cannedACL = acl;
+            return this;
+        }
+
+        public S3Renderer WithHeaders(NameValueCollection headers)
+        {
+            this.headers = headers;
+            return this;
+        }
+
+        private S3Renderer(AmazonS3 s3client)
+        {
+            this.s3client = s3client;
+        }
+        #endregion
     }
 }
