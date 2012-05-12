@@ -65,6 +65,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CloudFrontInvalidator.cs" />
     <Compile Include="KeyBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="S3Renderer.cs" />

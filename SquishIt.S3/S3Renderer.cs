@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.Net;
 using System.Web;
+using Amazon.CloudFront;
 using Amazon.S3;
 using Amazon.S3.Model;
 using SquishIt.Framework.Renderers;
@@ -13,6 +14,7 @@ namespace SquishIt.S3
         string bucket;
         AmazonS3 s3client;
         IKeyBuilder keyBuilder;
+        IInvalidator invalidator;
         bool overwrite;
         S3CannedACL cannedACL = S3CannedACL.NoACL;
         NameValueCollection headers;
@@ -37,6 +39,18 @@ namespace SquishIt.S3
         public S3Renderer WithDefaultKeyBuilder(string physicalApplicationPath, string virtualDirectory)
         {
             this.keyBuilder = new KeyBuilder(physicalApplicationPath, virtualDirectory);
+            return this;
+        }
+
+        public S3Renderer WithCloudfrontClient(AmazonCloudFront client)
+        {
+            this.invalidator = new CloudFrontInvalidator(client);
+            return this;
+        }
+
+        public S3Renderer WithInvalidator(IInvalidator instance)
+        {
+            this.invalidator = instance;
             return this;
         }
 
@@ -86,6 +100,8 @@ namespace SquishIt.S3
 
             //TODO: handle exceptions properly
             s3client.PutObject(request);
+
+            if(invalidator != null) invalidator.InvalidateObject(bucket, key);
         }
 
         bool FileExists(string key)
@@ -109,6 +125,7 @@ namespace SquishIt.S3
                 throw;
             }
         }
+
         public void Dispose()
         {
             s3client.Dispose();
