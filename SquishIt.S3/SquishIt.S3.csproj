@@ -71,6 +71,7 @@
     <Compile Include="S3Renderer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Content\App_Start\SquishItS3.cs.pp" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
