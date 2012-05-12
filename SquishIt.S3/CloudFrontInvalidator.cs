@@ -34,9 +34,12 @@ namespace SquishIt.S3
                 _cloudFrontClient.PostInvalidation(invalidationRequest);
             }
         }
+
+        Dictionary<string, string> distributionNameAndIds;
+
         string GetDistributionIdFor(string bucketName)
         {
-            var distributionNameAndIds =
+            distributionNameAndIds = distributionNameAndIds ??
                 _cloudFrontClient.ListDistributions()
                 .Distribution
                 .ToDictionary(cfd =>
