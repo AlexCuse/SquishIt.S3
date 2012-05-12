@@ -1,7 +1,4 @@
-﻿using System;
-using System.Web;
-
-namespace SquishIt.S3
+﻿namespace SquishIt.S3
 {
     public interface IKeyBuilder
     {

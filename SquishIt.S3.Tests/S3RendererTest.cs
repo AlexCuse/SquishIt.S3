@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Specialized;
-using System.Linq;
+﻿using System.Collections.Specialized;
 using System.Net;
 using System.Reflection;
-using System.Threading;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Moq;
