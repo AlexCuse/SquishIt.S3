@@ -1,4 +1,9 @@
-﻿using System.Net;
+﻿using System;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Net;
+using System.Reflection;
+using System.Threading;
 using Amazon.S3;
 using Amazon.S3.Model;
 using Moq;
@@ -25,7 +30,9 @@ namespace SquishIt.S3.Tests
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                 Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
 
-            using(var renderer = new S3Renderer(bucket, s3client.Object, false, keyBuilder.Object))
+            using(var renderer = S3Renderer.Create(s3client.Object)
+                                    .WithBucketName(bucket)
+                                    .WithKeyBuilder(keyBuilder.Object))
             {
                 renderer.Render(content, path);
             }
@@ -33,7 +40,7 @@ namespace SquishIt.S3.Tests
             s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
                                                                                 por.BucketName == bucket &&
                                                                                 por.ContentBody == content &&
-                                                                                por.CannedACL == S3CannedACL.PublicRead)));
+                                                                                por.CannedACL == S3CannedACL.NoACL)));
         }
 
         [Test]
@@ -51,7 +58,9 @@ namespace SquishIt.S3.Tests
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                 Returns(new GetObjectMetadataResponse());
 
-            using(var renderer = new S3Renderer(bucket, s3client.Object, false, keyBuilder.Object))
+            using(var renderer = S3Renderer.Create(s3client.Object)
+                                    .WithBucketName(bucket)
+                                    .WithKeyBuilder(keyBuilder.Object))
             {
                 renderer.Render(content, path);
             }
@@ -74,7 +83,10 @@ namespace SquishIt.S3.Tests
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                 Returns(new GetObjectMetadataResponse());
 
-            using(var renderer = new S3Renderer(bucket, s3client.Object, true, keyBuilder.Object))
+            using(var renderer = S3Renderer.Create(s3client.Object)
+                                    .WithBucketName(bucket)
+                                    .WithOverwriteBehavior(true)
+                                    .WithKeyBuilder(keyBuilder.Object))
             {
                 renderer.Render(content, path);
             }
@@ -82,7 +94,76 @@ namespace SquishIt.S3.Tests
             s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
                                                                                 por.BucketName == bucket &&
                                                                                 por.ContentBody == content &&
-                                                                                por.CannedACL == S3CannedACL.PublicRead)));
+                                                                                por.CannedACL == S3CannedACL.NoACL)));
         }
+
+        [Test]
+        public void WithCannedACL()
+        {
+            var s3client = new Mock<AmazonS3>();
+            var keyBuilder = new Mock<IKeyBuilder>();
+
+            var key = "key";
+            var bucket = "bucket";
+            var path = "path";
+            var content = "content";
+            var cannedAcl = S3CannedACL.BucketOwnerFullControl;
+
+            keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
+            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
+               Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
+
+            using(var renderer = S3Renderer.Create(s3client.Object)
+                                    .WithBucketName(bucket)
+                                    .WithOverwriteBehavior(false)
+                                    .WithKeyBuilder(keyBuilder.Object)
+                                    .WithCannedAcl(cannedAcl))
+            {
+                renderer.Render(content, path);
+            }
+
+            s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => por.CannedACL == cannedAcl)));
+        }
+
+        [Test]
+        public void WithHeaders()
+        {
+            var s3client = new Mock<AmazonS3>();
+            var keyBuilder = new Mock<IKeyBuilder>();
+
+            var key = "key";
+            var bucket = "bucket";
+            var path = "path";
+            var content = "content";
+            var headerValue = "test value";
+            var headerName = "cache-control";
+            var headers = new NameValueCollection {{headerName, headerValue}};
+
+            keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
+            s3client.Setup(
+                c =>
+                c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key)))
+                .
+                Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
+
+            using (var renderer = S3Renderer.Create(s3client.Object)
+                .WithBucketName(bucket)
+                .WithOverwriteBehavior(false)
+                .WithKeyBuilder(keyBuilder.Object)
+                .WithHeaders(headers))
+            {
+                renderer.Render(content, path);
+            }
+
+            s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => GetHeaders(por)[headerName] == headerValue)));
+        }
+
+        NameValueCollection GetHeaders(S3Request request)
+        {
+            var propertyInfo = typeof(S3Request).GetProperty("Headers", BindingFlags.NonPublic | BindingFlags.Instance);
+            return (NameValueCollection)propertyInfo.GetValue(request, null);
+        }
+
+
     }
 }

@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Specialized;
 using System.Net;
+using System.Web;
 using Amazon.S3;
 using Amazon.S3.Model;
 using SquishIt.Framework.Renderers;
@@ -8,22 +10,57 @@ namespace SquishIt.S3
 {
     public class S3Renderer : IRenderer, IDisposable
     {
-        readonly string bucket;
-        readonly AmazonS3 s3client;
-        readonly IKeyBuilder keyBuilder;
-        readonly bool overwrite;
+        string bucket;
+        AmazonS3 s3client;
+        IKeyBuilder keyBuilder;
+        bool overwrite;
+        S3CannedACL cannedACL = S3CannedACL.NoACL;
+        NameValueCollection headers;
 
-        public S3Renderer(string bucket, AmazonS3 s3client, string applicationPath, string virtualDirectory)
-            : this(bucket, s3client, false, new KeyBuilder(applicationPath, virtualDirectory))
+        public static S3Renderer Create(AmazonS3 s3client)
         {
+            return new S3Renderer(s3client);
         }
 
-        public S3Renderer(string bucket, AmazonS3 s3client, bool overwrite, IKeyBuilder keyBuilder)
+        public S3Renderer WithBucketName(string bucketName)
         {
-            this.bucket = bucket;
-            this.s3client = s3client;
-            this.keyBuilder = keyBuilder;
+            this.bucket = bucketName;
+            return this;
+        }
+
+        public S3Renderer WithKeyBuilder(IKeyBuilder builder)
+        {
+            this.keyBuilder = builder;
+            return this;
+        }
+
+        public S3Renderer WithDefaultKeyBuilder(string physicalApplicationPath, string virtualDirectory)
+        {
+            this.keyBuilder = new KeyBuilder(physicalApplicationPath, virtualDirectory);
+            return this;
+        }
+
+        public S3Renderer WithOverwriteBehavior(bool overwrite)
+        {
             this.overwrite = overwrite;
+            return this;
+        }
+
+        public S3Renderer WithCannedAcl(S3CannedACL acl)
+        {
+            this.cannedACL = acl;
+            return this;
+        }
+
+        public S3Renderer WithHeaders(NameValueCollection headers)
+        {
+            this.headers = headers;
+            return this;
+        }
+
+        private S3Renderer(AmazonS3 s3client)
+        {
+            this.s3client = s3client;
         }
 
         public void Render(string content, string outputPath)
@@ -42,8 +79,10 @@ namespace SquishIt.S3
             var request = new PutObjectRequest()
                 .WithBucketName(bucket)
                 .WithKey(key)
-                .WithCannedACL(S3CannedACL.PublicRead)
+                .WithCannedACL(cannedACL)
                 .WithContentBody(content);
+
+            if(headers != null) request.AddHeaders(headers);
 
             //TODO: handle exceptions properly
             s3client.PutObject(request);
