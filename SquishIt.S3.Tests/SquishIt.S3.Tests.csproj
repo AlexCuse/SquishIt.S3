@@ -34,8 +34,7 @@
     <Reference Include="AjaxMin">
       <HintPath>..\packages\AjaxMin.4.48.4489.28432\lib\net20\AjaxMin.dll</HintPath>
     </Reference>
-    <Reference Include="AWSSDK, Version=1.4.8.2, Culture=neutral, PublicKeyToken=cd2d24cd2bace800, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="AWSSDK">
       <HintPath>..\packages\AWSSDK.1.4.8.2\lib\AWSSDK.dll</HintPath>
     </Reference>
     <Reference Include="dotless.Core">
@@ -54,7 +53,7 @@
       <HintPath>..\packages\NUnit.2.6.0.12054\lib\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="SquishIt.Framework">
-      <HintPath>..\packages\SquishIt.0.8.7-beta2\lib\SquishIt.Framework.dll</HintPath>
+      <HintPath>..\packages\SquishIt.0.8.7-beta3\lib\SquishIt.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />

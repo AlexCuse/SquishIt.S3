@@ -5,6 +5,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.S3", "SquishIt.S3\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SquishIt.S3.Tests", "SquishIt.S3.Tests\SquishIt.S3.Tests.csproj", "{C1F17BFE-6908-46D1-ADDF-646885FE3E01}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E974F59D-8657-4239-A22F-4EF2C6CDD9AC}"
+	ProjectSection(SolutionItems) = preProject
+		pack-push.bat = pack-push.bat
+		squishit.s3.nuspec = squishit.s3.nuspec
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

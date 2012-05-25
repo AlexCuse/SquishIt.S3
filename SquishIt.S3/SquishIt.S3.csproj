@@ -49,8 +49,8 @@
     <Reference Include="Jurassic">
       <HintPath>..\packages\Jurassic.2.1.1\lib\Jurassic.dll</HintPath>
     </Reference>
-    <Reference Include="SquishIt.Framework, Version=0.8.6.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\SquishIt.0.8.7-beta2\lib\SquishIt.Framework.dll</HintPath>
+    <Reference Include="SquishIt.Framework">
+      <HintPath>..\packages\SquishIt.0.8.7-beta3\lib\SquishIt.Framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
