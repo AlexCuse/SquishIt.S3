@@ -15,11 +15,11 @@ namespace SquishIt.S3
     {
         const string amazonBucketUriSuffix = ".s3.amazonaws.com";
         const string dateFormatWithMilliseconds = "yyyy-MM-dd hh:mm:ss.ff";
-        readonly AmazonCloudFront _cloudFrontClient;
+        readonly AmazonCloudFront cloudFrontClient;
 
         public CloudFrontInvalidator(AmazonCloudFront cloudFrontClient)
         {
-            _cloudFrontClient = cloudFrontClient;
+            this.cloudFrontClient = cloudFrontClient;
         }
 
         public void InvalidateObject(string bucket, string key)
@@ -31,7 +31,7 @@ namespace SquishIt.S3
                     .WithDistribtionId(distId)
                     .WithInvalidationBatch(new InvalidationBatch(DateTime.Now.ToString(dateFormatWithMilliseconds), new List<string> { key }));
 
-                _cloudFrontClient.PostInvalidation(invalidationRequest);
+                cloudFrontClient.PostInvalidation(invalidationRequest);
             }
         }
 
@@ -40,7 +40,7 @@ namespace SquishIt.S3
         string GetDistributionIdFor(string bucketName)
         {
             distributionNameAndIds = distributionNameAndIds ??
-                _cloudFrontClient.ListDistributions()
+                cloudFrontClient.ListDistributions()
                 .Distribution
                 .ToDictionary(cfd =>
                     cfd.DistributionConfig.S3Origin.DNSName.Replace(amazonBucketUriSuffix, ""),
@@ -53,7 +53,7 @@ namespace SquishIt.S3
 
         public void Dispose()
         {
-            _cloudFrontClient.Dispose();
+            cloudFrontClient.Dispose();
         }
     }
 }

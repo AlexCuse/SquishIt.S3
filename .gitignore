@@ -8,5 +8,6 @@ obj
 # mstest test results
 TestResults
 
-# resharper
+# resharper/dottrace
 *ReSharper*
+*DotSettings*
