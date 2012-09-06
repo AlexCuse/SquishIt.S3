@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Specialized;
+using System.IO;
+using System.IO.Compression;
 using System.Net;
+using System.Text;
 using Amazon.CloudFront;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -17,6 +20,8 @@ namespace SquishIt.S3
         bool overwrite;
         S3CannedACL cannedACL = S3CannedACL.NoACL;
         NameValueCollection headers;
+        bool compress;
+        ICompressor compressor;
 
         public void Render(string content, string outputPath)
         {
@@ -25,8 +30,33 @@ namespace SquishIt.S3
             var key = keyBuilder.GetKeyFor(outputPath);
             if(overwrite || !FileExists(key))
             {
-                UploadContent(key, content);
+                if (compress)
+                {
+                    UploadCompressedContent(key, content);
+                }
+                else
+                {
+                    UploadContent(key, content);
+                }
+
             }
+        }
+
+        void UploadCompressedContent(string key, string content)
+        {
+
+            var request = new PutObjectRequest()
+                .WithBucketName(bucket)
+                .WithKey(key)
+                .WithCannedACL(cannedACL);
+            request.InputStream = compressor.Compress(content);
+
+            if (headers != null) request.AddHeaders(headers);
+
+            //TODO: handle exceptions properly
+            s3client.PutObject(request);
+
+            if (invalidator != null) invalidator.InvalidateObject(bucket, key);
         }
 
         void UploadContent(string key, string content)
@@ -82,6 +112,25 @@ namespace SquishIt.S3
         {
             this.bucket = bucketName;
             return this;
+        }
+
+        public S3Renderer WithCompression(ICompressor textCompressor)
+        {
+            this.compressor = textCompressor;
+            this.compress = true;
+
+            if (headers == null)
+            {
+                headers = new NameValueCollection();
+            }
+            
+            headers.Add(textCompressor.Headers);
+            return this;
+        }
+
+        public S3Renderer WithGZipCompressionEnabled()
+        {
+            return WithCompression(new GZipCompressor());
         }
 
         public S3Renderer WithKeyBuilder(IKeyBuilder builder)

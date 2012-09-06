@@ -11,3 +11,5 @@ TestResults
 # resharper/dottrace
 *ReSharper*
 *DotSettings*
+*.dotcover
+*.IsolatorCache.user
