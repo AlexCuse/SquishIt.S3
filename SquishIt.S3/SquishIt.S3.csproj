@@ -66,6 +66,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CloudFrontInvalidator.cs" />
+    <Compile Include="GZipCompressor.cs" />
+    <Compile Include="ICompressor.cs" />
     <Compile Include="KeyBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="S3Renderer.cs" />
