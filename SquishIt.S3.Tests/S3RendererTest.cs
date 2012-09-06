@@ -189,7 +189,7 @@ namespace SquishIt.S3.Tests
             invalidator.Verify(i => i.InvalidateObject(bucket, key));
         }
 
-        NameValueCollection GetHeaders(S3Request request)
+      NameValueCollection GetHeaders(S3Request request)
         {
             var propertyInfo = typeof(S3Request).GetProperty("Headers", BindingFlags.NonPublic | BindingFlags.Instance);
             return (NameValueCollection)propertyInfo.GetValue(request, null);
