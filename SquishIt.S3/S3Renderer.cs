@@ -101,7 +101,7 @@ namespace SquishIt.S3
             return this;
         }
 
-        public S3Renderer WithCompression(ICompressor textCompressor)
+        internal S3Renderer WithCompressor(ICompressor textCompressor)
         {
             this.compressor = textCompressor;
             this.compress = true;
@@ -117,7 +117,7 @@ namespace SquishIt.S3
 
         public S3Renderer WithGZipCompressionEnabled()
         {
-            return WithCompression(new GZipCompressor());
+            return WithCompressor(new GZipCompressor());
         }
 
         public S3Renderer WithKeyBuilder(IKeyBuilder builder)
