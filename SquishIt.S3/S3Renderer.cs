@@ -2,6 +2,7 @@
 using System.Collections.Specialized;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Net;
 using System.Text;
 using Amazon.CloudFront;
@@ -156,7 +157,18 @@ namespace SquishIt.S3
 
         public S3Renderer WithHeaders(NameValueCollection headers)
         {
-            this.headers = headers;
+            if (this.headers == null)
+            {
+                this.headers = headers;
+            }
+            else
+            {
+                foreach(var key in headers.AllKeys)
+                {
+                    this.headers.Remove(key);
+                }
+                this.headers.Add(headers);
+            }
             return this;
         }
 

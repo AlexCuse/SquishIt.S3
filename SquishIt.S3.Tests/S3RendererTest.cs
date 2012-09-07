@@ -254,10 +254,67 @@ namespace SquishIt.S3.Tests
             Assert.AreEqual(headers["test"], capturedHeaders["test"]);
         }
 
+        [Test]
+        public void Render_With_Compression_And_Additional_Headers()
+        {
+            var s3client = new Mock<AmazonS3>();
+            var keyBuilder = new Mock<IKeyBuilder>();
+            var compressor = new Mock<ICompressor>();
+
+            var key = "key";
+            var bucket = "bucket";
+            var path = "path";
+            var content = "content";
+            var compressedContent = "compressedContent";
+            string capturedContentAsString = null;
+
+            var headers = new NameValueCollection { { "test", "header" }, { "another", "headerToOverwrite" } };
+            var moreHeaders = new NameValueCollection { { "another", "header" } };
+
+            NameValueCollection capturedHeaders = null;
+
+            keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
+
+            compressor.Setup(c => c.Compress(content))
+                .Returns(new MemoryStream(Encoding.UTF8.GetBytes(compressedContent)));
+
+            compressor.Setup(c => c.Headers).Returns(headers);
+
+            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
+                Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
+
+            s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
+                                                                                por.BucketName == bucket &&
+                                                                                por.CannedACL == S3CannedACL.NoACL)))
+                    .Callback<PutObjectRequest>(por =>
+                    {
+                        var reader = new StreamReader(por.InputStream);
+                        capturedContentAsString = reader.ReadToEnd();
+                        capturedHeaders = GetHeaders(por);
+                    });
+
+            using (var renderer = S3Renderer.Create(s3client.Object)
+                                    .WithBucketName(bucket)
+                                    .WithKeyBuilder(keyBuilder.Object)
+                                    .WithCompressor(compressor.Object)
+                                    .WithHeaders(moreHeaders))
+            {
+                renderer.Render(content, path);
+            }
+
+            Assert.AreEqual(compressedContent, capturedContentAsString);
+            Assert.AreEqual(2, capturedHeaders.Count);
+            Assert.AreEqual(headers.Keys[0], capturedHeaders.Keys[0]);
+            Assert.AreEqual(headers["test"], capturedHeaders["test"]);
+            Assert.AreEqual(moreHeaders.Keys[0], capturedHeaders.Keys[1]);
+            Assert.AreEqual(moreHeaders["another"], capturedHeaders["another"]);
+        }
+
         NameValueCollection GetHeaders(S3Request request)
         {
             var propertyInfo = typeof(S3Request).GetProperty("Headers", BindingFlags.NonPublic | BindingFlags.Instance);
             return (NameValueCollection)propertyInfo.GetValue(request, null);
         }
+
     }
 }
