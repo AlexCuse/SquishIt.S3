@@ -30,42 +30,29 @@ namespace SquishIt.S3
             var key = keyBuilder.GetKeyFor(outputPath);
             if(overwrite || !FileExists(key))
             {
-                if (compress)
+                using(var stream = ContentForUpload(content))
                 {
-                    UploadCompressedContent(key, content);
+                    UploadContent(key, stream); 
                 }
-                else
-                {
-                    UploadContent(key, content);
-                }
-
             }
         }
 
-        void UploadCompressedContent(string key, string content)
+        Stream ContentForUpload(string content)
         {
-
-            var request = new PutObjectRequest()
-                .WithBucketName(bucket)
-                .WithKey(key)
-                .WithCannedACL(cannedACL);
-            request.InputStream = compressor.Compress(content);
-
-            if (headers != null) request.AddHeaders(headers);
-
-            //TODO: handle exceptions properly
-            s3client.PutObject(request);
-
-            if (invalidator != null) invalidator.InvalidateObject(bucket, key);
+            if(compress)
+            {
+                return compressor.Compress(content);
+            }
+            return new MemoryStream(Encoding.UTF8.GetBytes(content));
         }
 
-        void UploadContent(string key, string content)
+        void UploadContent(string key, Stream content)
         {
             var request = new PutObjectRequest()
                 .WithBucketName(bucket)
                 .WithKey(key)
                 .WithCannedACL(cannedACL)
-                .WithContentBody(content);
+                .WithInputStream(content) as PutObjectRequest;
 
             if(headers != null) request.AddHeaders(headers);
 

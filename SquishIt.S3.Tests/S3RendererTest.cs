@@ -1,4 +1,5 @@
 ﻿using System.Collections.Specialized;
+using System.IO;
 using System.Net;
 using System.Reflection;
 using Amazon.S3;
@@ -21,23 +22,30 @@ namespace SquishIt.S3.Tests
             var bucket = "bucket";
             var path = "path";
             var content = "content";
+            string capturedContentAsString = null;
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
 
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                 Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
 
-            using(var renderer = S3Renderer.Create(s3client.Object)
+            s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
+                                                                                por.BucketName == bucket &&
+                                                                                por.CannedACL == S3CannedACL.NoACL)))
+                    .Callback<PutObjectRequest>(por =>
+                                                    {
+                                                        var reader = new StreamReader(por.InputStream);
+                                                        capturedContentAsString = reader.ReadToEnd();
+                                                    });
+
+            using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithKeyBuilder(keyBuilder.Object))
             {
                 renderer.Render(content, path);
             }
 
-            s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
-                                                                                por.BucketName == bucket &&
-                                                                                por.ContentBody == content &&
-                                                                                por.CannedACL == S3CannedACL.NoACL)));
+            Assert.AreEqual(content, capturedContentAsString);
         }
 
         [Test]
@@ -55,7 +63,7 @@ namespace SquishIt.S3.Tests
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                 Returns(new GetObjectMetadataResponse());
 
-            using(var renderer = S3Renderer.Create(s3client.Object)
+            using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithKeyBuilder(keyBuilder.Object))
             {
@@ -66,7 +74,7 @@ namespace SquishIt.S3.Tests
         }
 
         [Test]
-        public void Render_Uploads_If_File_Exists_And_ForceUpload()
+        public void Render_Uploads_If_ForceUpload()
         {
             var s3client = new Mock<AmazonS3>();
             var keyBuilder = new Mock<IKeyBuilder>();
@@ -75,12 +83,20 @@ namespace SquishIt.S3.Tests
             var bucket = "bucket";
             var path = "path";
             var content = "content";
+            string capturedContentAsString = null;
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-                Returns(new GetObjectMetadataResponse());
 
-            using(var renderer = S3Renderer.Create(s3client.Object)
+            s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
+                                                                                por.BucketName == bucket &&
+                                                                                por.CannedACL == S3CannedACL.NoACL)))
+                    .Callback<PutObjectRequest>(por =>
+                    {
+                        var reader = new StreamReader(por.InputStream);
+                        capturedContentAsString = reader.ReadToEnd();
+                    });
+
+            using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithOverwriteBehavior(true)
                                     .WithKeyBuilder(keyBuilder.Object))
@@ -88,10 +104,7 @@ namespace SquishIt.S3.Tests
                 renderer.Render(content, path);
             }
 
-            s3client.Verify(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
-                                                                                por.BucketName == bucket &&
-                                                                                por.ContentBody == content &&
-                                                                                por.CannedACL == S3CannedACL.NoACL)));
+            Assert.AreEqual(content, capturedContentAsString);
         }
 
         [Test]
@@ -110,7 +123,7 @@ namespace SquishIt.S3.Tests
             s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
                Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
 
-            using(var renderer = S3Renderer.Create(s3client.Object)
+            using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithOverwriteBehavior(false)
                                     .WithKeyBuilder(keyBuilder.Object)
@@ -134,7 +147,7 @@ namespace SquishIt.S3.Tests
             var content = "content";
             var headerValue = "test value";
             var headerName = "cache-control";
-            var headers = new NameValueCollection {{headerName, headerValue}};
+            var headers = new NameValueCollection { { headerName, headerValue } };
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
             s3client.Setup(
@@ -177,7 +190,7 @@ namespace SquishIt.S3.Tests
                 .
                 Throws(new AmazonS3Exception("", HttpStatusCode.NotFound));
 
-            using(var renderer = S3Renderer.Create(s3client.Object)
+            using (var renderer = S3Renderer.Create(s3client.Object)
                 .WithBucketName(bucket)
                 .WithOverwriteBehavior(false)
                 .WithKeyBuilder(keyBuilder.Object)
@@ -189,7 +202,7 @@ namespace SquishIt.S3.Tests
             invalidator.Verify(i => i.InvalidateObject(bucket, key));
         }
 
-      NameValueCollection GetHeaders(S3Request request)
+        NameValueCollection GetHeaders(S3Request request)
         {
             var propertyInfo = typeof(S3Request).GetProperty("Headers", BindingFlags.NonPublic | BindingFlags.Instance);
             return (NameValueCollection)propertyInfo.GetValue(request, null);
