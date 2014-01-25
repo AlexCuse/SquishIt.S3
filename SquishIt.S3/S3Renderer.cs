@@ -15,7 +15,7 @@ namespace SquishIt.S3
     public class S3Renderer : IRenderer, IDisposable
     {
         string bucket;
-        AmazonS3 s3client;
+        IAmazonS3 s3client;
         IKeyBuilder keyBuilder;
         IInvalidator invalidator;
         bool overwrite;
@@ -50,12 +50,20 @@ namespace SquishIt.S3
         void UploadContent(string key, Stream content)
         {
             var request = new PutObjectRequest()
-                .WithBucketName(bucket)
-                .WithKey(key)
-                .WithCannedACL(cannedACL)
-                .WithInputStream(content) as PutObjectRequest;
+                {
+                    BucketName = bucket,
+                    Key = key,
+                    CannedACL = cannedACL,
+                    InputStream = content,
+                };
 
-            if(headers != null) request.AddHeaders(headers);
+            if(headers != null)
+            {
+                foreach (var headerName in headers.AllKeys)
+                {
+                    request.Headers[headerName] = headers[headerName];
+                }
+            }
 
             //TODO: handle exceptions properly
             s3client.PutObject(request);
@@ -63,13 +71,16 @@ namespace SquishIt.S3
             if(invalidator != null) invalidator.InvalidateObject(bucket, key);
         }
 
+        //TODO: extract this to another object that can be mocked (can't instantiate the exception we need)
         bool FileExists(string key)
         {
             try
             {
-                var request = new GetObjectMetadataRequest()
-                    .WithBucketName(bucket)
-                    .WithKey(key);
+                var request = new GetObjectMetadataRequest
+                    {
+                        BucketName = bucket,
+                        Key = key
+                    };
 
                 var response = s3client.GetObjectMetadata(request);
 
@@ -91,7 +102,7 @@ namespace SquishIt.S3
         }
 
         #region setup
-        public static S3Renderer Create(AmazonS3 s3client)
+        public static S3Renderer Create(IAmazonS3 s3client)
         {
             return new S3Renderer(s3client);
         }
@@ -132,7 +143,7 @@ namespace SquishIt.S3
             return WithKeyBuilder(new KeyBuilder(physicalApplicationPath, virtualDirectory));
         }
 
-        public S3Renderer WithCloudfrontClient(AmazonCloudFront client)
+        public S3Renderer WithCloudfrontClient(IAmazonCloudFront client)
         {
             return WithInvalidator(new CloudFrontInvalidator(client));
         }
@@ -172,7 +183,7 @@ namespace SquishIt.S3
             return this;
         }
 
-        private S3Renderer(AmazonS3 s3client)
+        private S3Renderer(IAmazonS3 s3client)
         {
             this.s3client = s3client;
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Amazon.CloudFront;
 using Amazon.CloudFront.Model;
@@ -13,22 +14,27 @@ namespace SquishIt.S3.Tests
         [Test]
         public void Invalidate()
         {
-            var cloudfrontClient = new Mock<AmazonCloudFront>();
+            var cloudfrontClient = new Mock<IAmazonCloudFront>();
 
             var distributionId = Guid.NewGuid().ToString();
             var bucket = Guid.NewGuid().ToString();
             var distribution = bucket + ".s3.amazonaws.com";
             var key = Guid.NewGuid().ToString();
 
-            var listDistributionsResponse = new ListDistributionsResponse();
-            listDistributionsResponse.Distribution.Add(new CloudFrontDistribution
-            {
-                Id = distributionId,
-                DistributionConfig = new CloudFrontDistributionConfig
+            var listDistributionsResponse = new ListDistributionsResponse()
                 {
-                    S3Origin = new S3Origin(distribution, null)
-                }
-            });
+                    DistributionList = new DistributionList()
+                        {
+                            Items = new List<DistributionSummary>
+                                {
+                                    new DistributionSummary
+                                    {
+                                        Id = distributionId,
+                                        DomainName = distribution,
+                                    }
+                                }
+                        }
+                };
 
             cloudfrontClient.Setup(cfc => cfc.ListDistributions())
                 .Returns(listDistributionsResponse);
@@ -36,30 +42,35 @@ namespace SquishIt.S3.Tests
             var invalidator = new CloudFrontInvalidator(cloudfrontClient.Object);
             invalidator.InvalidateObject(bucket, key);
 
-            cloudfrontClient.Verify(cfc => cfc.PostInvalidation(It.Is<PostInvalidationRequest>(pir => pir.DistributionId == distributionId
-                && pir.InvalidationBatch.Paths.Count == 1
-                && pir.InvalidationBatch.Paths.First() == key)));
+            cloudfrontClient.Verify(cfc => cfc.CreateInvalidation(It.Is<CreateInvalidationRequest>(pir => pir.DistributionId == distributionId
+                && pir.InvalidationBatch.Paths.Quantity == 1
+                && pir.InvalidationBatch.Paths.Items.First() == key)));
         }
 
         [Test]
         public void Only_Retrieve_Distributions_Once()
         {
-            var cloudfrontClient = new Mock<AmazonCloudFront>();
+            var cloudfrontClient = new Mock<IAmazonCloudFront>();
 
             var distributionId = Guid.NewGuid().ToString();
             var bucket = Guid.NewGuid().ToString();
             var distribution = bucket + ".s3.amazonaws.com";
             var key = Guid.NewGuid().ToString();
 
-            var listDistributionsResponse = new ListDistributionsResponse();
-            listDistributionsResponse.Distribution.Add(new CloudFrontDistribution
+            var listDistributionsResponse = new ListDistributionsResponse()
             {
-                Id = distributionId,
-                DistributionConfig = new CloudFrontDistributionConfig
+                DistributionList = new DistributionList()
                 {
-                    S3Origin = new S3Origin(distribution, null)
+                    Items = new List<DistributionSummary>
+                                {
+                                    new DistributionSummary
+                                    {
+                                        Id = distributionId,
+                                        DomainName = distribution,
+                                    }
+                                }
                 }
-            });
+            };
 
             cloudfrontClient.Setup(cfc => cfc.ListDistributions())
                 .Returns(listDistributionsResponse);
@@ -68,9 +79,9 @@ namespace SquishIt.S3.Tests
             invalidator.InvalidateObject(bucket, key);
             invalidator.InvalidateObject(bucket, key);
 
-            cloudfrontClient.Verify(cfc => cfc.PostInvalidation(It.Is<PostInvalidationRequest>(pir => pir.DistributionId == distributionId
-                && pir.InvalidationBatch.Paths.Count == 1
-                && pir.InvalidationBatch.Paths.First() == key)), Times.Exactly(2));
+            cloudfrontClient.Verify(cfc => cfc.CreateInvalidation(It.Is<CreateInvalidationRequest>(pir => pir.DistributionId == distributionId
+                && pir.InvalidationBatch.Paths.Quantity == 1
+                && pir.InvalidationBatch.Paths.Items.First() == key)), Times.Exactly(2));
 
             cloudfrontClient.Verify(cfc => cfc.ListDistributions(), Times.Once());
         }

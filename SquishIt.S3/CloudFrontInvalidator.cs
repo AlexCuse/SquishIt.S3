@@ -15,9 +15,9 @@ namespace SquishIt.S3
     {
         const string amazonBucketUriSuffix = ".s3.amazonaws.com";
         const string dateFormatWithMilliseconds = "yyyy-MM-dd hh:mm:ss.ff";
-        readonly AmazonCloudFront cloudFrontClient;
+        readonly IAmazonCloudFront cloudFrontClient;
 
-        public CloudFrontInvalidator(AmazonCloudFront cloudFrontClient)
+        public CloudFrontInvalidator(IAmazonCloudFront cloudFrontClient)
         {
             this.cloudFrontClient = cloudFrontClient;
         }
@@ -27,11 +27,21 @@ namespace SquishIt.S3
             var distId = GetDistributionIdFor(bucket);
             if(!string.IsNullOrWhiteSpace(distId))
             {
-                var invalidationRequest = new PostInvalidationRequest()
-                    .WithDistribtionId(distId)
-                    .WithInvalidationBatch(new InvalidationBatch(DateTime.Now.ToString(dateFormatWithMilliseconds), new List<string> { key }));
+                var invalidationRequest = new CreateInvalidationRequest()
+                    {
+                        DistributionId = distId,
+                        InvalidationBatch = new InvalidationBatch()
+                            {
+                                CallerReference = DateTime.Now.ToString(dateFormatWithMilliseconds),
+                                Paths = new Paths
+                                    {
+                                        Quantity = 1,
+                                        Items = new List<string> {key}
+                                    }
+                            }
+                    };
 
-                cloudFrontClient.PostInvalidation(invalidationRequest);
+                cloudFrontClient.CreateInvalidation(invalidationRequest);
             }
         }
 
@@ -40,10 +50,8 @@ namespace SquishIt.S3
         string GetDistributionIdFor(string bucketName)
         {
             distributionNameAndIds = distributionNameAndIds ??
-                cloudFrontClient.ListDistributions()
-                .Distribution
-                .ToDictionary(cfd =>
-                    cfd.DistributionConfig.S3Origin.DNSName.Replace(amazonBucketUriSuffix, ""),
+                cloudFrontClient.ListDistributions().DistributionList.Items.ToDictionary(cfd =>
+                    cfd.DomainName.Replace(amazonBucketUriSuffix, ""),
                     cfd => cfd.Id);
 
             string id = null;
