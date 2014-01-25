@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="CloudFrontInvalidator.cs" />
     <Compile Include="GZipCompressor.cs" />
+    <Compile Include="ICheckForFileExistence.cs" />
     <Compile Include="ICompressor.cs" />
     <Compile Include="KeyBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

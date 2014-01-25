@@ -7,6 +7,7 @@ using System.Net;
 using System.Text;
 using Amazon.CloudFront;
 using Amazon.S3;
+using Amazon.S3.IO;
 using Amazon.S3.Model;
 using SquishIt.Framework.Renderers;
 
@@ -23,24 +24,33 @@ namespace SquishIt.S3
         NameValueCollection headers;
         bool compress;
         ICompressor compressor;
+        ICheckForFileExistence checkForFileExistence;
+
+        ICheckForFileExistence CheckForFileExistence
+        {
+            get
+            {
+                return checkForFileExistence = (checkForFileExistence ?? new CheckForFileExistence(s3client));
+            }
+        }
 
         public void Render(string content, string outputPath)
         {
-            if(string.IsNullOrEmpty(outputPath) || string.IsNullOrEmpty(content)) throw new InvalidOperationException("Can't render to S3 with missing key/content.");
+            if (string.IsNullOrEmpty(outputPath) || string.IsNullOrEmpty(content)) throw new InvalidOperationException("Can't render to S3 with missing key/content.");
 
             var key = keyBuilder.GetKeyFor(outputPath);
-            if(overwrite || !FileExists(key))
+            if (overwrite || !FileExists(key))
             {
-                using(var stream = ContentForUpload(content))
+                using (var stream = ContentForUpload(content))
                 {
-                    UploadContent(key, stream); 
+                    UploadContent(key, stream);
                 }
             }
         }
 
         Stream ContentForUpload(string content)
         {
-            if(compress)
+            if (compress)
             {
                 return compressor.Compress(content);
             }
@@ -57,7 +67,7 @@ namespace SquishIt.S3
                     InputStream = content,
                 };
 
-            if(headers != null)
+            if (headers != null)
             {
                 foreach (var headerName in headers.AllKeys)
                 {
@@ -68,32 +78,12 @@ namespace SquishIt.S3
             //TODO: handle exceptions properly
             s3client.PutObject(request);
 
-            if(invalidator != null) invalidator.InvalidateObject(bucket, key);
+            if (invalidator != null) invalidator.InvalidateObject(bucket, key);
         }
 
-        //TODO: extract this to another object that can be mocked (can't instantiate the exception we need)
         bool FileExists(string key)
         {
-            try
-            {
-                var request = new GetObjectMetadataRequest
-                    {
-                        BucketName = bucket,
-                        Key = key
-                    };
-
-                var response = s3client.GetObjectMetadata(request);
-
-                return true;
-            }
-            catch(AmazonS3Exception ex)
-            {
-                if(ex.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return false;
-                }
-                throw;
-            }
+            return CheckForFileExistence.Exists(bucket, key);
         }
 
         public void Dispose()
@@ -122,7 +112,7 @@ namespace SquishIt.S3
             {
                 headers = new NameValueCollection();
             }
-            
+
             headers.Add(textCompressor.Headers);
             return this;
         }
@@ -174,12 +164,18 @@ namespace SquishIt.S3
             }
             else
             {
-                foreach(var key in headers.AllKeys)
+                foreach (var key in headers.AllKeys)
                 {
                     this.headers.Remove(key);
                 }
                 this.headers.Add(headers);
             }
+            return this;
+        }
+
+        internal S3Renderer WithCheckForFileExistence(ICheckForFileExistence checkForFileExistence)
+        {
+            this.checkForFileExistence = checkForFileExistence;
             return this;
         }
 

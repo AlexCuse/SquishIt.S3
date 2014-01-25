@@ -14,17 +14,6 @@ namespace SquishIt.S3.Tests
     [TestFixture]
     public class S3RendererTest
     {
-        AmazonS3Exception CreateNotFoundException()
-        {
-            var constructorInfo = typeof (AmazonS3Exception).GetConstructor(BindingFlags.NonPublic | BindingFlags.Instance, null, new[]
-                {
-                    typeof (string), typeof (ErrorType), typeof (string), typeof (string), typeof (HttpStatusCode)
-                }, null);
-
-            return (AmazonS3Exception) constructorInfo.Invoke(new object[]
-                                                   {"", ErrorType.Receiver, "", "", HttpStatusCode.NotFound});
-        }
-
         [Test]
         public void Render_Uploads_If_File_Doesnt_Exist()
         {
@@ -39,9 +28,6 @@ namespace SquishIt.S3.Tests
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
 
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-                Throws(CreateNotFoundException());
-
             s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
                                                                                 por.BucketName == bucket &&
                                                                                 por.CannedACL == S3CannedACL.NoACL)))
@@ -51,9 +37,13 @@ namespace SquishIt.S3.Tests
                                                         capturedContentAsString = reader.ReadToEnd();
                                                     });
 
+            var checkForFileExistence = new Mock<ICheckForFileExistence>();
+            checkForFileExistence.Setup(cffi => cffi.Exists(bucket, key)).Returns(false);
+
             using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
-                                    .WithKeyBuilder(keyBuilder.Object))
+                                    .WithKeyBuilder(keyBuilder.Object)
+                                    .WithCheckForFileExistence(checkForFileExistence.Object))
             {
                 renderer.Render(content, path);
             }
@@ -73,12 +63,14 @@ namespace SquishIt.S3.Tests
             var content = "content";
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-                Returns(new GetObjectMetadataResponse());
+
+            var checkForFileExistence = new Mock<ICheckForFileExistence>();
+            checkForFileExistence.Setup(cffi => cffi.Exists(bucket, key)).Returns(true);
 
             using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
-                                    .WithKeyBuilder(keyBuilder.Object))
+                                    .WithKeyBuilder(keyBuilder.Object)
+                                    .WithCheckForFileExistence(checkForFileExistence.Object))
             {
                 renderer.Render(content, path);
             }
@@ -133,14 +125,13 @@ namespace SquishIt.S3.Tests
             var cannedAcl = S3CannedACL.BucketOwnerFullControl;
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-               Throws(CreateNotFoundException());
 
             using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithOverwriteBehavior(false)
                                     .WithKeyBuilder(keyBuilder.Object)
-                                    .WithCannedAcl(cannedAcl))
+                                    .WithCannedAcl(cannedAcl)
+                                    .WithCheckForFileExistence(Mock.Of<ICheckForFileExistence>()))
             {
                 renderer.Render(content, path);
             }
@@ -163,17 +154,16 @@ namespace SquishIt.S3.Tests
             var headers = new NameValueCollection { { headerName, headerValue } };
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
-            s3client.Setup(
-                c =>
-                c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key)))
-                .
-                Throws(CreateNotFoundException());
+
+            var checkForFileExistence = new Mock<ICheckForFileExistence>();
+            checkForFileExistence.Setup(cffi => cffi.Exists(bucket, key)).Returns(false);
 
             using (var renderer = S3Renderer.Create(s3client.Object)
                 .WithBucketName(bucket)
                 .WithOverwriteBehavior(false)
                 .WithKeyBuilder(keyBuilder.Object)
-                .WithHeaders(headers))
+                .WithHeaders(headers)
+                .WithCheckForFileExistence(checkForFileExistence.Object))
             {
                 renderer.Render(content, path);
             }
@@ -197,17 +187,16 @@ namespace SquishIt.S3.Tests
             var headers = new NameValueCollection { { headerName, headerValue } };
 
             keyBuilder.Setup(kb => kb.GetKeyFor(path)).Returns(key);
-            s3client.Setup(
-                c =>
-                c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key)))
-                .
-                Throws(CreateNotFoundException());
+
+            var checkForFileExistence = new Mock<ICheckForFileExistence>();
+            checkForFileExistence.Setup(cffi => cffi.Exists(bucket, key)).Returns(false);
 
             using (var renderer = S3Renderer.Create(s3client.Object)
                 .WithBucketName(bucket)
                 .WithOverwriteBehavior(false)
                 .WithKeyBuilder(keyBuilder.Object)
-                .WithInvalidator(invalidator.Object))
+                .WithInvalidator(invalidator.Object)
+                .WithCheckForFileExistence(checkForFileExistence.Object))
             {
                 renderer.Render(content, path);
             }
@@ -239,9 +228,6 @@ namespace SquishIt.S3.Tests
 
             compressor.Setup(c => c.Headers).Returns(headers);
 
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-                Throws(CreateNotFoundException());
-
             s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
                                                                                 por.BucketName == bucket &&
                                                                                 por.CannedACL == S3CannedACL.NoACL)))
@@ -255,7 +241,8 @@ namespace SquishIt.S3.Tests
             using (var renderer = S3Renderer.Create(s3client.Object)
                                     .WithBucketName(bucket)
                                     .WithKeyBuilder(keyBuilder.Object)
-                                    .WithCompressor(compressor.Object))
+                                    .WithCompressor(compressor.Object)
+                                    .WithCheckForFileExistence(Mock.Of<ICheckForFileExistence>()))
             {
                 renderer.Render(content, path);
             }
@@ -291,9 +278,6 @@ namespace SquishIt.S3.Tests
 
             compressor.Setup(c => c.Headers).Returns(headers);
 
-            s3client.Setup(c => c.GetObjectMetadata(It.Is<GetObjectMetadataRequest>(gomr => gomr.BucketName == bucket && gomr.Key == key))).
-                Throws(CreateNotFoundException());
-
             s3client.Setup(c => c.PutObject(It.Is<PutObjectRequest>(por => por.Key == key &&
                                                                                 por.BucketName == bucket &&
                                                                                 por.CannedACL == S3CannedACL.NoACL)))
@@ -308,7 +292,8 @@ namespace SquishIt.S3.Tests
                                     .WithBucketName(bucket)
                                     .WithKeyBuilder(keyBuilder.Object)
                                     .WithCompressor(compressor.Object)
-                                    .WithHeaders(moreHeaders))
+                                    .WithHeaders(moreHeaders)
+                                    .WithCheckForFileExistence(Mock.Of<ICheckForFileExistence>()))
             {
                 renderer.Render(content, path);
             }
