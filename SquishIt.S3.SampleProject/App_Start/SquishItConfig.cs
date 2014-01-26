@@ -11,23 +11,29 @@ namespace SquishIt.S3.SampleProject.App_Start
     {
         public static void Initialize()
         {
+            var awsAccessKey = ConfigurationManager.AppSettings["aws.accessKey"];
+            var awsSecretKey = ConfigurationManager.AppSettings["aws.secretKey"];
+            var bucketName = ConfigurationManager.AppSettings["aws.bucketName"];
+            var baseCdnUrl = ConfigurationManager.AppSettings["aws.baseCdnUrl"];
+
             var s3client =
                 AWSClientFactory.CreateAmazonS3Client(
-                    ConfigurationManager.AppSettings["aws.accessKey"],
-                    ConfigurationManager.AppSettings["aws.secretKey"],
+                    awsAccessKey,
+                    awsSecretKey,
                     RegionEndpoint.USEast1);
 
-            var bucketName = ConfigurationManager.AppSettings["aws.bucketName"];
 
             var renderer = S3Renderer.Create(s3client)
                 .WithBucketName(bucketName)
-                .WithDefaultKeyBuilder(HttpContext.Current.Request.PhysicalApplicationPath,
-                                                HttpContext.Current.Request.ApplicationPath)
-                .WithCannedAcl(S3CannedACL.PublicRead) as IRenderer;
+                .WithDefaultKeyBuilder(HttpContext.Current.Request.PhysicalApplicationPath, HttpContext.Current.Request.ApplicationPath)
+                .WithCloudfrontClient(AWSClientFactory.CreateAmazonCloudFrontClient(awsAccessKey, awsSecretKey))
+                .WithCannedAcl(S3CannedACL.PublicRead)
+                .WithOverwriteBehavior(true) as IRenderer;
 
             Bundle.ConfigureDefaults()
                 .UseReleaseRenderer(renderer)
-                .UseDefaultOutputBaseHref("http://s3.amazonaws.com/" + bucketName);
+                .UseDefaultOutputBaseHref(baseCdnUrl);
+                //.UseDefaultOutputBaseHref("http://s3.amazonaws.com/" + bucketName);
         }
     }
 }

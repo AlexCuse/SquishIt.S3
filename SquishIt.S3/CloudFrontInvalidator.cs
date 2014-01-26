@@ -25,21 +25,21 @@ namespace SquishIt.S3
         public void InvalidateObject(string bucket, string key)
         {
             var distId = GetDistributionIdFor(bucket);
-            if(!string.IsNullOrWhiteSpace(distId))
+            if (!string.IsNullOrWhiteSpace(distId))
             {
                 var invalidationRequest = new CreateInvalidationRequest()
+                {
+                    DistributionId = distId,
+                    InvalidationBatch = new InvalidationBatch()
                     {
-                        DistributionId = distId,
-                        InvalidationBatch = new InvalidationBatch()
-                            {
-                                CallerReference = DateTime.Now.ToString(dateFormatWithMilliseconds),
-                                Paths = new Paths
-                                    {
-                                        Quantity = 1,
-                                        Items = new List<string> {key}
-                                    }
-                            }
-                    };
+                        CallerReference = DateTime.Now.ToString(dateFormatWithMilliseconds),
+                        Paths = new Paths
+                        {
+                            Quantity = 1,
+                            Items = new List<string> { key.StartsWith("/") ? key : "/" + key }
+                        }
+                    }
+                };
 
                 cloudFrontClient.CreateInvalidation(invalidationRequest);
             }
@@ -50,9 +50,8 @@ namespace SquishIt.S3
         string GetDistributionIdFor(string bucketName)
         {
             distributionNameAndIds = distributionNameAndIds ??
-                cloudFrontClient.ListDistributions().DistributionList.Items.ToDictionary(cfd =>
-                    cfd.DomainName.Replace(amazonBucketUriSuffix, ""),
-                    cfd => cfd.Id);
+                cloudFrontClient.ListDistributions().DistributionList.Items
+                .ToDictionary(cfd => cfd.Origins.Items[0].DomainName.Replace(amazonBucketUriSuffix, string.Empty), cfd => cfd.Id);
 
             string id = null;
             distributionNameAndIds.TryGetValue(bucketName, out id);

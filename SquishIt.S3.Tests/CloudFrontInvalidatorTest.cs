@@ -31,11 +31,22 @@ namespace SquishIt.S3.Tests
                                     {
                                         Id = distributionId,
                                         DomainName = distribution,
+                                        Origins = new Origins
+                                        {
+                                            Quantity = 1,
+                                            Items = new List<Origin>
+                                            {
+                                                new Origin
+                                                {
+                                                    DomainName = distribution
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                         }
                 };
-
+            
             cloudfrontClient.Setup(cfc => cfc.ListDistributions())
                 .Returns(listDistributionsResponse);
 
@@ -44,7 +55,7 @@ namespace SquishIt.S3.Tests
 
             cloudfrontClient.Verify(cfc => cfc.CreateInvalidation(It.Is<CreateInvalidationRequest>(pir => pir.DistributionId == distributionId
                 && pir.InvalidationBatch.Paths.Quantity == 1
-                && pir.InvalidationBatch.Paths.Items.First() == key)));
+                && pir.InvalidationBatch.Paths.Items.First() == "/" + key)));
         }
 
         [Test]
@@ -55,7 +66,7 @@ namespace SquishIt.S3.Tests
             var distributionId = Guid.NewGuid().ToString();
             var bucket = Guid.NewGuid().ToString();
             var distribution = bucket + ".s3.amazonaws.com";
-            var key = Guid.NewGuid().ToString();
+            var key = "/" + Guid.NewGuid().ToString();
 
             var listDistributionsResponse = new ListDistributionsResponse()
             {
@@ -67,11 +78,22 @@ namespace SquishIt.S3.Tests
                                     {
                                         Id = distributionId,
                                         DomainName = distribution,
+                                        Origins = new Origins
+                                        {
+                                            Quantity = 1,
+                                            Items = new List<Origin>
+                                            {
+                                                new Origin
+                                                {
+                                                    DomainName = distribution
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                 }
             };
-
+            
             cloudfrontClient.Setup(cfc => cfc.ListDistributions())
                 .Returns(listDistributionsResponse);
 
