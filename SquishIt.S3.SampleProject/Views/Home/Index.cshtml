@@ -5,7 +5,7 @@
 
 <h2>Index</h2>
 
-@Html.Raw(@SquishIt.Framework.Bundle.JavaScript().RenderCachedAssetTag("combined-jq.js"))
+@Html.Raw(SquishIt.Framework.Bundle.JavaScript().RenderNamed("combined-jq.js"))
 
 <script type="text/javascript">
     $(document).ready(function() {

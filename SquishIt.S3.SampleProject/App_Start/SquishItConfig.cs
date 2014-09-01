@@ -14,7 +14,7 @@ namespace SquishIt.S3.SampleProject.App_Start
             var awsAccessKey = ConfigurationManager.AppSettings["aws.accessKey"];
             var awsSecretKey = ConfigurationManager.AppSettings["aws.secretKey"];
             var bucketName = ConfigurationManager.AppSettings["aws.bucketName"];
-            var baseCdnUrl = ConfigurationManager.AppSettings["aws.baseCdnUrl"];
+            //var baseCdnUrl = ConfigurationManager.AppSettings["aws.baseCdnUrl"];
 
             var s3client =
                 AWSClientFactory.CreateAmazonS3Client(
@@ -39,12 +39,14 @@ namespace SquishIt.S3.SampleProject.App_Start
                 //    .UseReleaseRenderer(renderer)
                 //    .UseDefaultOutputBaseHref(baseCdnUrl);
 
+                Bundle.ConfigureDefaults().UseDefaultOutputBaseHref("//s3.amazonaws.com/" + bucketName);
+
                 Bundle.JavaScript()
                     .Add("~/Scripts/jquery-1.7.1.js")
                     .WithReleaseFileRenderer(renderer)
-                    .WithOutputBaseHref(baseCdnUrl)
+                    //.WithOutputBaseHref(baseCdnUrl)
                     .ForceRelease()
-                    .AsCached("combined-jq.js", "~/combined-jq.js");
+                    .AsNamed("combined-jq.js", "/combined-jq.js");
             }//when dispose is called, the invalidator will be flushed, sending an invalidation request for *all* processed bundles to cloudfront
         }
     }
