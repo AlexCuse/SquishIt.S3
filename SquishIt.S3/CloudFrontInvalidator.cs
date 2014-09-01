@@ -11,11 +11,13 @@ namespace SquishIt.S3
         void InvalidateObject(string bucket, string key);
     }
 
-    class CloudFrontInvalidator : IDisposable, IInvalidator
+    public class CloudFrontInvalidator : IDisposable, IInvalidator
     {
         const string amazonBucketUriSuffix = ".s3.amazonaws.com";
         const string dateFormatWithMilliseconds = "yyyy-MM-dd hh:mm:ss.ff";
         readonly IAmazonCloudFront cloudFrontClient;
+        private CreateInvalidationRequest pendingRequest;
+        private readonly object pendingRequestLockTarget = new object();
 
         public CloudFrontInvalidator(IAmazonCloudFront cloudFrontClient)
         {
@@ -25,23 +27,46 @@ namespace SquishIt.S3
         public void InvalidateObject(string bucket, string key)
         {
             var distId = GetDistributionIdFor(bucket);
+
             if (!string.IsNullOrWhiteSpace(distId))
             {
-                var invalidationRequest = new CreateInvalidationRequest()
-                {
-                    DistributionId = distId,
-                    InvalidationBatch = new InvalidationBatch()
-                    {
-                        CallerReference = DateTime.Now.ToString(dateFormatWithMilliseconds),
-                        Paths = new Paths
-                        {
-                            Quantity = 1,
-                            Items = new List<string> { key.StartsWith("/") ? key : "/" + key }
-                        }
-                    }
-                };
+                var preparedKey = key.StartsWith("/") ? key : "/" + key;
 
-                cloudFrontClient.CreateInvalidation(invalidationRequest);
+                lock(pendingRequestLockTarget)
+                {
+                    if (pendingRequest == null)
+                    {
+                        pendingRequest = new CreateInvalidationRequest()
+                        {
+                            DistributionId = distId,
+                            InvalidationBatch = new InvalidationBatch()
+                            {
+                                CallerReference = DateTime.Now.ToString(dateFormatWithMilliseconds),
+                                Paths = new Paths
+                                {
+                                    Quantity = 1,
+                                    Items = new List<string> {preparedKey}
+                                }
+                            }
+                        };
+                    }
+                    else
+                    {
+                        pendingRequest.InvalidationBatch.Paths.Items.Add(preparedKey);
+                    }
+                }
+            }
+        }
+
+        public void Flush()
+        {
+            lock(pendingRequestLockTarget)
+            {
+                if (pendingRequest != null)
+                {
+                    cloudFrontClient.CreateInvalidation(pendingRequest);
+                    pendingRequest = null;
+                }
             }
         }
 
@@ -60,6 +85,7 @@ namespace SquishIt.S3
 
         public void Dispose()
         {
+            Flush();
             cloudFrontClient.Dispose();
         }
     }

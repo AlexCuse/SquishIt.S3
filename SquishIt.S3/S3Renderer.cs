@@ -133,10 +133,10 @@ namespace SquishIt.S3
             return WithKeyBuilder(new KeyBuilder(physicalApplicationPath, virtualDirectory));
         }
 
-        public S3Renderer WithCloudfrontClient(IAmazonCloudFront client)
-        {
-            return WithInvalidator(new CloudFrontInvalidator(client));
-        }
+        //public S3Renderer WithCloudfrontClient(IAmazonCloudFront client)
+        //{
+        //    return WithInvalidator(new CloudFrontInvalidator(client));
+        //}
 
         public S3Renderer WithInvalidator(IInvalidator instance)
         {

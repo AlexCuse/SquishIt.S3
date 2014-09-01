@@ -23,17 +23,29 @@ namespace SquishIt.S3.SampleProject.App_Start
                     RegionEndpoint.USEast1);
 
 
-            var renderer = S3Renderer.Create(s3client)
-                .WithBucketName(bucketName)
-                .WithDefaultKeyBuilder(HttpContext.Current.Request.PhysicalApplicationPath, HttpContext.Current.Request.ApplicationPath)
-                .WithCloudfrontClient(AWSClientFactory.CreateAmazonCloudFrontClient(awsAccessKey, awsSecretKey))
-                .WithCannedAcl(S3CannedACL.PublicRead)
-                .WithOverwriteBehavior(true) as IRenderer;
+            using (var invalidator = new CloudFrontInvalidator(AWSClientFactory.CreateAmazonCloudFrontClient(awsAccessKey, awsSecretKey)))
+            {
+                var renderer = S3Renderer.Create(s3client)
+                    .WithBucketName(bucketName)
+                    .WithDefaultKeyBuilder(HttpContext.Current.Request.PhysicalApplicationPath,
+                        HttpContext.Current.Request.ApplicationPath)
+                    .WithInvalidator(invalidator)
+                    .WithCannedAcl(S3CannedACL.PublicRead)
+                    .WithOverwriteBehavior(true) as IRenderer;
 
-            Bundle.ConfigureDefaults()
-                .UseReleaseRenderer(renderer)
-                .UseDefaultOutputBaseHref(baseCdnUrl);
-                //.UseDefaultOutputBaseHref("http://s3.amazonaws.com/" + bucketName);
+                //dont recommend this usage pattern if cloudfront invalidation is needed, because of the need to tightly control renderer lifecycle for request pooling
+
+                //Bundle.ConfigureDefaults()
+                //    .UseReleaseRenderer(renderer)
+                //    .UseDefaultOutputBaseHref(baseCdnUrl);
+
+                Bundle.JavaScript()
+                    .Add("~/Scripts/jquery-1.7.1.js")
+                    .WithReleaseFileRenderer(renderer)
+                    .WithOutputBaseHref(baseCdnUrl)
+                    .ForceRelease()
+                    .AsCached("combined-jq.js", "~/combined-jq.js");
+            }//when dispose is called, the invalidator will be flushed, sending an invalidation request for *all* processed bundles to cloudfront
         }
     }
 }
