@@ -1,0 +1,667 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SquishIt.Framework</name>
+    </assembly>
+    <members>
+        <member name="T:SquishIt.Framework.Base.BundleBase`1">
+            <summary>
+            Base class for bundle implementations.  Configuration methods all return (T)this.
+            </summary>
+            <typeparam name="T">Type of bundle being implemented (Javascript or CSS).</typeparam>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithoutTypeAttribute">
+            <summary>
+            Specify that a bundle should be rendered without type="" in the html tag.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.Add(System.String)">
+            <summary>
+            Add a single file to a bundle.
+            </summary>
+            <param name="filePath">Path to file being added</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddMinified(System.String)">
+            <summary>
+            Add a single file that has already been minified to a bundle.  This will prevent the file from being minified again, a potential cause of bugs in combined file.
+            </summary>
+            <param name="filePath">Path to file being added</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddDirectory(System.String,System.Boolean)">
+            <summary>
+            Add all files in a directory with extensions matching those known to bundle type.  Defaults to include subfolders.
+            </summary>
+            <param name="folderPath">Path to directory being added.</param>
+            <param name="recursive">Include subfolders</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddMinifiedDirectory(System.String,System.Boolean)">
+            <summary>
+            Add all files in a directory with extensions matching those known to bundle type.  Defaults to include subfolders.  All files found will be considered pre-minified.   
+            </summary>
+            <param name="folderPath">Path to directory.</param>
+            <param name="recursive">Include subfolders</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddString(System.String)">
+            <summary>
+            Add arbitrary content that is not saved on disk.
+            </summary>
+            <param name="content">Content to include in bundle.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddString(System.String,System.String,System.String)">
+            <summary>
+            Add arbitrary content that is not saved on disk with the assumption that it is treated as if found in a given directory.  This is useful for adding LESS content that needs to get imports relative to a particular location.
+            </summary>
+            <param name="content">Content to include in bundle.</param>
+            <param name="extension">Extension that would be included in filename if content were saved to disk - this is needed to determine if the content should be preprocessed.</param>
+            <param name="currentDirectory">Folder that file would reside in if content were saved to disk - this is used for processing relative imports within arbitrary content.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddMinifiedString(System.String)">
+            <summary>
+            Add pre-minified arbitrary content (not saved on disk).
+            </summary>
+            <param name="content">Minified content to include in bundle.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddMinifiedString(System.String,System.String)">
+            <summary>
+            Add pre-minified arbitrary content (not saved on disk) with the assumption that it is treated as if found in a given directory.  This is useful for adding LESS content that needs to get imports relative to a particular location.
+            </summary>
+            <param name="content">Minified content to include in bundle.</param>
+            <param name="extension">Extension that would be included in filename if content were saved to disk - this is needed to determine if the content should be preprocessed.</param>
+            <param name="currentDirectory">Folder that file would reside in if content were saved to disk - this is used for processing relative imports within arbitrary content.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddString(System.String,System.Object[])">
+            <summary>
+            Add arbitrary content (not saved on disk) using string.Format to inject values.
+            </summary>
+            <param name="format">Content to include in bundle.</param>
+            <param name="values">Values to be injected using string.Format.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddString(System.String,System.String,System.Object[])">
+            <summary>
+            Add arbitrary content (not saved on disk) using string.Format to inject values.
+            </summary>
+            <param name="format">Content to include in bundle.</param>
+            <param name="extension">Extension that would be included in filename if content were saved to disk - this is needed to determine if the content should be preprocessed.</param>
+            <param name="values">Values to be injected using string.Format.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddRemote(System.String,System.String)">
+            <summary>
+            Add a remote asset to bundle.
+            </summary>
+            <param name="localPath">Path to treat asset as if it comes from.</param>
+            <param name="remotePath">URL to remote asset.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddRemote(System.String,System.String,System.Boolean)">
+            <summary>
+            Add a remote asset to bundle.
+            </summary>
+            <param name="localPath">Path to treat asset as if it comes from.</param>
+            <param name="remotePath">URL to remote asset.</param>
+            <param name="downloadRemote">Fetch remote content to include in bundle.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddDynamic(System.String)">
+            <summary>
+            Add dynamic (app-generated) content - the generated proxy file SignalR serves to clients is a good example.
+            </summary>
+            <param name="siteRelativePath">Site-relative path to content (eg "signalr/hubs").</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddRootEmbeddedResource(System.String,System.String)">
+            <summary>
+            Add embedded resource in root namespace.
+            </summary>
+            <param name="localPath">Path to treat asset as if it comes from.</param>
+            <param name="embeddedResourcePath">Path to resource embedded in root namespace (eg "WebForms.js").</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AddEmbeddedResource(System.String,System.String)">
+            <summary>
+            Add embedded resource.
+            </summary>
+            <param name="localPath">Path to treat asset as if it comes from.</param>
+            <param name="embeddedResourcePath">Path to embedded resource (eg "SquishIt.Tests://EmbeddedResource.Embedded.css").</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderOnlyIfOutputFileMissing">
+            <summary>
+            Configure bundle to bypass writing to disk if the output file already exists.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.ForceDebug">
+            <summary>
+            Configure bundle to always render in debug mode (assets served separately and unminified).
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.ForceDebugIf(System.Func{System.Boolean})">
+            <summary>
+            Configure bundle to render in debug mode (assets served separately and unminified) if a precondition is met.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.ForceRelease">
+            <summary>
+            Configure bundle to always render in release mode (assets combined and minified).
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithOutputBaseHref(System.String)">
+            <summary>
+            Configure bundle to prefix paths with given base URL - this is useful for cdn scenarios.
+            </summary>
+            <param name="href">Base path to CDN (eg "http://static.myapp.com").</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithReleaseFileRenderer(SquishIt.Framework.Renderers.IRenderer)">
+            <summary>
+            Configure bundle to use a non-standard file renderer.  This is useful if you want combined files uploaded to a static server or CDN.
+            </summary>
+            <param name="renderer">Implementation of <see cref="T:SquishIt.Framework.Renderers.IRenderer">IRenderer</see> to be used when creating combined file.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithCacheInvalidationStrategy(SquishIt.Framework.Invalidation.ICacheInvalidationStrategy)">
+            <summary>
+            Configure bundle to use a non-standard cache invalidation strategy.
+            </summary>
+            <param name="strategy">Implementation of <see cref="T:SquishIt.Framework.Invalidation.ICacheInvalidationStrategy">ICacheInvalidationStrategy</see> to be used when generating content tag (eg <see cref="T:SquishIt.Framework.Invalidation.HashAsVirtualDirectoryCacheInvalidationStrategy">HashAsVirtualDirectoryCacheInvalidationStrategy</see>)</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithAttribute(System.String,System.String)">
+            <summary>
+            Include a given HTML attribute in rendered tag.
+            </summary>
+            <param name="name">Attribute name.</param>
+            <param name="value">Attribute value.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithAttributes(System.Collections.Generic.Dictionary{System.String,System.String},System.Boolean)">
+            <summary>
+            Include a given HTML attribute in rendered tag.
+            </summary>
+            <param name="attributes">Attribute name/value pairs.</param>
+            <param name="merge">Merge with attributes already added (false will overwrite).</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithMinifier``1">
+            <summary>
+            Configure bundle to use a type other than the default minifier for given bundle type.
+            </summary>
+            <typeparam name="TMin">Type of <see cref="!:IMinifier">IMinifier</see> to use.</typeparam>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithMinifier``1(``0)">
+            <summary>
+            Configure bundle to use a minifier instance.
+            </summary>
+            <typeparam name="TMin">Instance of <see cref="!:IMinifier">IMinifier</see> to use.</typeparam>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.HashKeyNamed(System.String)">
+            <summary>
+            Configure bundle to use a specific name for cache-breaking parameter (only used with querystring invalidation).
+            </summary>
+            <param name="hashQueryStringKeyName">Name of parameter to be added to content URLs.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithoutRevisionHash">
+            <summary>
+            Configure bundle to bypass cache invalidation.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.WithPreprocessor(SquishIt.Framework.IPreprocessor)">
+            <summary>
+            Configure bundle to use provided preprocessor instance.
+            </summary>
+            <param name="instance"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> to use when rendering bundle.</param>
+            <returns></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.Render(System.String)">
+            <summary>
+            Render bundle to a file.
+            </summary>
+            <param name="renderTo">Path to combined file.</param>
+            <returns>HTML tag.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderCachedAssetTag(System.String)">
+            <summary>
+            Render tag for a cached bundle.
+            </summary>
+            <param name="name">Name of cached bundle.</param>
+            <returns>HTML tag.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AsNamed(System.String,System.String)">
+            <summary>
+            Render bundle into the cache with a given name.
+            </summary>
+            <param name="name">Name of bundle in cache.</param>
+            <param name="renderToFilePath">File system path that cached bundle would be rendered to (for import processing).</param>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.AsCached(System.String,System.String)">
+            <summary>
+            Render bundle into cache and return tag.
+            </summary>
+            <param name="name">Name of bundle in cache.</param>
+            <param name="renderToFilePath">File system path that cached bundle would be rendered to (for import processing).</param>
+            <returns>HTML tag.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderNamed(System.String)">
+            <summary>
+            Render bundle with a given name.
+            </summary>
+            <param name="name">Name for bundle.</param>
+            <returns>HTML tag.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderCached(System.String)">
+            <summary>
+            Render bundle from cache with a given name.
+            </summary>
+            <param name="name">Name for cached bundle.</param>
+            <returns>HTML tag.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderRawContent(System.String)">
+            <summary>
+            Render 'raw' content directly without building tags or writing to files (and save in cache by name)
+            </summary>
+            <returns>String representation of content, minified if needed.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.BundleBase`1.RenderCachedRawContent(System.String)">
+            <summary>
+            Render cached 'raw' bundle content.
+            </summary>
+            <param name="bundleName">String representation of content according to cache.</param>
+            <returns></returns>
+        </member>
+        <member name="P:SquishIt.Framework.Base.BundleBase`1.AssetCount">
+            <summary>
+            Retrieve number of assets included in bundle.
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.Base.NullPreprocessor">
+            <summary>
+            No-op preprocessor used to prevent extensions from blocking pipeline
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.Base.Preprocessor">
+            <summary>
+            Base class for implementing custom preprocessors.
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.IPreprocessor">
+            <summary>
+            Interface for preprocessor implementations
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.IPreprocessor.ValidFor(System.String)">
+            <summary>
+            Report to caller whether preprocessor is active for provided file extension.
+            </summary>
+            <param name="extension">Extension caller has found on a file.</param>
+            <returns>bool</returns>
+        </member>
+        <member name="M:SquishIt.Framework.IPreprocessor.Process(System.String,System.String)">
+            <summary>
+            Process content.
+            </summary>
+            <param name="filePath">Disk location of content.</param>
+            <param name="content">Content.</param>
+            <returns><see cref="T:SquishIt.Framework.IProcessResult">IProcessResult</see></returns>
+        </member>
+        <member name="P:SquishIt.Framework.IPreprocessor.Extensions">
+            <summary>
+            File extensions this preprocessor instance can be used for.
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.IPreprocessor.IgnoreExtensions">
+            <summary>
+            Extensions that should be "ignored" when calculating preprocessors to use from file path.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Base.Preprocessor.ValidFor(System.String)">
+            <summary>
+            Report to caller whether preprocessor is active for provided file extension.
+            </summary>
+            <param name="extension">Extension caller has found on a file.</param>
+            <returns>bool</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Base.Preprocessor.Process(System.String,System.String)">
+            <summary>
+            Process content.
+            </summary>
+            <param name="filePath">Disk location of content.</param>
+            <param name="content">Content.</param>
+            <returns><see cref="T:SquishIt.Framework.IProcessResult">IProcessResult</see></returns>
+        </member>
+        <member name="P:SquishIt.Framework.Base.Preprocessor.Extensions">
+            <summary>
+            File extensions this preprocessor instance can be used for.
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.Base.Preprocessor.IgnoreExtensions">
+            <summary>
+            Extensions that should be "ignored" when calculating preprocessors to use from file path.
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.IProcessResult">
+            <summary>
+            Data class detailing results of preprocessing.
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.IProcessResult.Result">
+            <summary>
+            Preprocessed content.
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.IProcessResult.Dependencies">
+            <summary>
+            File dependencies introduced when preprocessing.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseYuiForCssMinification">
+            <summary>
+                Use Yahoo YUI Compressor for CSS minification by default.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseMsAjaxForCssMinification">
+            <summary>
+                Use Microsoft Ajax Minifier for CSS minification by default.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseNoCssMinification">
+            <summary>
+                By default, perform no minification of CSS.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseMsAjaxForJsMinification">
+            <summary>
+                Use Microsoft Ajax Minifier for Javascript minification by default.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseYuiForJsMinification">
+            <summary>
+                Use Yahoo YUI Compressor for Javascript minification by default.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseNoJsMinification">
+            <summary>
+                By default, perform no minification of Javascript.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Configuration.UseJsMinForJsMinification">
+            <summary>
+                Use Douglas Crockford's JsMin for Javascript minification by default.
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.Configuration.JavascriptMimeType">
+            <summary>
+                Mime-type used to serve Javascript content. Defaults to "application/javascript".
+                To enable gzip compression in IIS change this to "application/x-javascript".
+            </summary>
+        </member>
+        <member name="P:SquishIt.Framework.Configuration.CssMimeType">
+            <summary>
+                Mime-type used to serve CSS content. Defaults to "text/css".
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.Bundle">
+            <summary>
+            This is the entry point for the majority of interaction with the SquishIt API.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.RegisterGlobalPreprocessor``1(``0)">
+            <summary>
+            Register a preprocessor instance to be used for all bundle types.
+            </summary>
+            <typeparam name="T"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> implementation type.</typeparam>
+            <param name="instance"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> instance.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.RegisterScriptPreprocessor``1(``0)">
+            <summary>
+            Register a preprocessor instance to be used for script bundles.
+            </summary>
+            <typeparam name="T"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> implementation type.</typeparam>
+            <param name="instance"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> instance.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.RegisterStylePreprocessor``1(``0)">
+            <summary>
+            Register a preprocessor instance to be used for all style bundles.
+            </summary>
+            <typeparam name="T"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> implementation type.</typeparam>
+            <param name="instance"><see cref="T:SquishIt.Framework.IPreprocessor">IPreprocessor</see> instance.</param>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.JavaScript">
+            <summary>
+            Create a javascript bundle.
+            </summary>
+            <returns><see cref="T:SquishIt.Framework.JavaScript.JavaScriptBundle">JavaScriptBundle</see></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.JavaScript(SquishIt.Framework.Utilities.IDebugStatusReader)">
+            <summary>
+            Create a javascript bundle with non default <see cref="!:IDebugStatusReader">IDebugStatusReader</see>.
+            </summary>
+            <param name="debugStatusReader"><see cref="!:IDebugStatusReader">IDebugStatusReader</see> instance to use.</param>
+            <returns><see cref="T:SquishIt.Framework.JavaScript.JavaScriptBundle">JavaScriptBundle</see></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.Css">
+            <summary>
+            Create a CSS bundle.
+            </summary>
+            <returns><see cref="T:SquishIt.Framework.CSS.CSSBundle">CSSBundle</see></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.Css(SquishIt.Framework.Utilities.IDebugStatusReader)">
+            <summary>
+            Create a CSS bundle with non default <see cref="!:IDebugStatusReader">IDebugStatusReader</see>.
+            </summary>
+            <param name="debugStatusReader"><see cref="!:IDebugStatusReader">IDebugStatusReader</see> instance to use.</param>
+            <returns><see cref="T:SquishIt.Framework.CSS.CSSBundle">CSSBundle</see></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Bundle.ConfigureDefaults">
+            <summary>
+            Provides access to a mutable static configuration.  Changes made to this configuration will be applied to all future bundles created.
+            </summary>
+            <returns><see cref="T:SquishIt.Framework.Configuration">Configuration</see></returns>
+        </member>
+        <member name="T:SquishIt.Framework.CSS.CSSBundle">
+            <summary>
+            CSS Bundle implementation.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.CSS.CSSBundle.ProcessImports">
+            <summary>
+            Configure bundle to process CSS imports.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.CSS.CSSBundle.AppendHashForAssets">
+            <summary>
+            Configure bundle to append versioning hash to asset reference URLs.
+            </summary>
+        </member>
+        <member name="T:SquishIt.Framework.JavaScript.JavaScriptBundle">
+            <summary>
+            JavaScript bundle implementation.
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.JavaScript.JavaScriptBundle.WithDeferredLoad">
+            <summary>
+            Configure bundle to render with "deferred" attribute (script only).
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.JavaScript.JavaScriptBundle.WithAsyncLoad">
+            <summary>
+            Configure bundle to render with "async" attribute (script only).
+            </summary>
+        </member>
+        <member name="M:SquishIt.Framework.CSS.CSSAssetsFileHasher.AppendQueryStringPairValue(System.String,System.String,System.String)">
+            <summary>
+            Append a query string pair value to a url
+            </summary>
+            <param name="url">The url to add query string pair value value to.</param>
+            <param name="key">The key to use.</param>
+            <param name="value">The value to use.</param>
+            <returns></returns>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenFileStream(System.IO.FileInfo,System.Int32,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a file stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="fileMode">The file mode to use</param>
+            <param name="fileAccess">The file access to use</param>
+            <param name="fileShare">The file sharing to use</param>
+            <returns>A file stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenFileStream(System.String,System.Int32,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a file stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="fileMode">The file mode to use</param>
+            <param name="fileAccess">The file access to use</param>
+            <param name="fileShare">The file sharing to use</param>
+            <returns>A file stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenTextStreamReader(System.IO.FileInfo,System.Int32)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <returns>A text stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenTextStreamReader(System.String,System.Int32)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <returns>A text stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenTextStreamWriter(System.IO.FileInfo,System.Int32,System.Boolean)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="append">Should file be appended</param>
+            <returns>A text stream of the file</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Files.IRetryableFileOpener.OpenTextStreamWriter(System.String,System.Int32,System.Boolean)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="append">Should file be appended</param>
+            <returns>A text stream of the file</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenFileStream(System.IO.FileInfo,System.Int32,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a file stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="fileMode">The file mode to use</param>
+            <param name="fileAccess">The file access to use</param>
+            <param name="fileShare">The file sharing to use</param>
+            <returns>A file stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            Note - Directory creation only works if retry count is greater than one
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenFileStream(System.String,System.Int32,System.IO.FileMode,System.IO.FileAccess,System.IO.FileShare)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a file stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="fileMode">The file mode to use</param>
+            <param name="fileAccess">The file access to use</param>
+            <param name="fileShare">The file sharing to use</param>
+            <returns>A file stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.CreateDirectoryStructure(System.String)">
+            <summary>
+            Create folder structure for a given file path
+            </summary>
+            <param name="filePath"></param>
+            <remarks>
+            Will create folder with permissions inherited from parent
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenTextStreamReader(System.IO.FileInfo,System.Int32)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <returns>A text stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenTextStreamReader(System.String,System.Int32)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <returns>A text stream of the file</returns>
+            <remarks>
+            It attempt to open the file in increasingly longer periods and throw an exception if it cannot open it within the
+            specified number of retries.
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenTextStreamWriter(System.IO.FileInfo,System.Int32,System.Boolean)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="fileInfo">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="append">Should file be appended</param>
+            <returns>A text stream of the file</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Files.RetryableFileOpener.OpenTextStreamWriter(System.String,System.Int32,System.Boolean)">
+            <summary>
+            File might be locked when attempting to open it. This will attempt to open the file the number of times specified by <paramref name="retry"/>
+            </summary>
+            <param name="filePath">The file to attempt to get a text stream for</param>
+            <param name="retry">The number of times a file open should be attempted</param>
+            <param name="append">Should file be appended</param>
+            <returns>A text stream of the file</returns>
+            <remarks>
+            Note - Directory creation only works if retry count is greater than one
+            </remarks>
+        </member>
+        <member name="M:SquishIt.Framework.Utilities.Hasher.GetHash(System.IO.Stream)">
+            <summary>
+            Calculates an MD5 hash for a stream specified by <paramref name="stream"/>
+            </summary>
+            <param name="stream">A <see cref="T:System.IO.Stream"/> object specifying the file containing the content for which we're calculating the hash.</param>
+            <returns>A string containing an MD5 hash.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Utilities.Hasher.GetHash(System.IO.FileInfo)">
+            <summary>
+            Calculates an MD5 hash for a specified byte range of the file specified by <paramref name="fileInfo"/>
+            </summary>
+            <param name="fileInfo">A <see cref="T:System.IO.FileInfo"/> object specifying the file containing the content for which we're calculating the hash.</param>
+            <returns>A string containing an MD5 hash.</returns>
+        </member>
+        <member name="M:SquishIt.Framework.Utilities.Hasher.GetHash(System.String)">
+            <summary>
+            Calculates an MD5 hash for text specified by <paramref name="content" />
+            </summary>
+            <param name="content">A string containing the content for which we're calculating the hash.</param>
+            <returns>A string containing an MD5 hash.</returns>
+        </member>
+    </members>
+</doc>
