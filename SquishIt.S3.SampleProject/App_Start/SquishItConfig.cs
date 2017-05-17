@@ -1,6 +1,8 @@
 ﻿using System.Configuration;
 using System.Web;
 using Amazon;
+using Amazon.CloudFront;
+using Amazon.Runtime;
 using Amazon.S3;
 using SquishIt.Framework;
 using SquishIt.Framework.Renderers;
@@ -16,14 +18,11 @@ namespace SquishIt.S3.SampleProject.App_Start
             var bucketName = ConfigurationManager.AppSettings["aws.bucketName"];
             //var baseCdnUrl = ConfigurationManager.AppSettings["aws.baseCdnUrl"];
 
-            var s3client =
-                AWSClientFactory.CreateAmazonS3Client(
-                    awsAccessKey,
-                    awsSecretKey,
-                    RegionEndpoint.USEast1);
+            var awsCredentials = new BasicAWSCredentials(awsAccessKey, awsSecretKey);
 
-
-            using (var invalidator = new CloudFrontInvalidator(AWSClientFactory.CreateAmazonCloudFrontClient(awsAccessKey, awsSecretKey)))
+            using (var s3client = new AmazonS3Client(awsCredentials, RegionEndpoint.SAEast1))
+            using(var cfclient = new AmazonCloudFrontClient(awsCredentials))
+            using (var invalidator = new CloudFrontInvalidator(cfclient))
             {
                 var renderer = S3Renderer.Create(s3client)
                     .WithBucketName(bucketName)
